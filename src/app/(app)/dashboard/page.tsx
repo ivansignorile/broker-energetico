@@ -10,7 +10,7 @@ export default async function DashboardPage() {
         <CardHeader><CardTitle>Benvenuto, {profile.nome_completo}</CardTitle></CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            Il widget delle scadenze sarà disponibile dopo l'implementazione di contratti e documenti.
+            Il widget delle scadenze sarà disponibile dopo l&apos;implementazione di contratti e documenti.
           </p>
         </CardContent>
       </Card>

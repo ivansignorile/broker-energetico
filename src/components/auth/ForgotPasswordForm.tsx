@@ -33,7 +33,7 @@ export function ForgotPasswordForm() {
       <Card>
         <CardHeader><CardTitle>Email inviata</CardTitle></CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-sm">Se l'indirizzo è registrato, riceverai un link per reimpostare la password.</p>
+          <p className="text-sm">Se l&apos;indirizzo è registrato, riceverai un link per reimpostare la password.</p>
           <Link href="/login" className="text-sm underline">Torna al login</Link>
         </CardContent>
       </Card>

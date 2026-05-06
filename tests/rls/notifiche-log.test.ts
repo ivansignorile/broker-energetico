@@ -43,3 +43,41 @@ describe("RLS: notifiche_log", () => {
     expect(error).not.toBeNull();
   });
 });
+
+describe("RLS: cron_runs", () => {
+  let admin: TestUser;
+  let comm: TestUser;
+
+  beforeAll(async () => {
+    admin = await createTestUser("admin");
+    comm = await createTestUser("commerciale");
+
+    const svc = adminClient();
+    await svc.from("cron_runs").insert({
+      job_name: "test-job",
+      ok: true,
+      summary: { test: true },
+    });
+  });
+
+  afterAll(async () => {
+    for (const u of [admin, comm]) await deleteTestUser(u.id);
+  });
+
+  it("admin can SELECT cron_runs", async () => {
+    const { data } = await admin.client.from("cron_runs").select("id");
+    expect(data?.length ?? 0).toBeGreaterThanOrEqual(1);
+  });
+
+  it("commerciale cannot SELECT cron_runs", async () => {
+    const { data } = await comm.client.from("cron_runs").select("id");
+    expect(data?.length ?? 0).toBe(0);
+  });
+
+  it("nobody can INSERT cron_runs via authenticated", async () => {
+    const { error } = await admin.client.from("cron_runs").insert({
+      job_name: "hacker", ok: false,
+    });
+    expect(error).not.toBeNull();
+  });
+});
