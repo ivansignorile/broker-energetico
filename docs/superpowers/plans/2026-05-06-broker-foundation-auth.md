@@ -32,7 +32,6 @@ broker-energetico/
 ├── playwright.config.ts               NEW
 ├── supabase/
 │   ├── config.toml                    NEW · da supabase init
-│   ├── seed.sql                       NEW · primo admin in dev
 │   ├── migrations/
 │   │   ├── 20260506000001_init_enums.sql                 NEW
 │   │   ├── 20260506000002_init_tables.sql                NEW
@@ -49,8 +48,7 @@ broker-energetico/
 │   │   ├── 20260506000013_rls_cron_runs.sql              NEW
 │   │   └── 20260506000014_rls_storage.sql                NEW
 ├── scripts/
-│   ├── seed-dev-users.ts              NEW · crea 3 utenti test (admin, commerciale, operatore)
-│   └── reset-db.ts                    NEW · convenience: db reset + seed
+│   └── seed-dev-users.ts              NEW · crea 3 utenti dev nel progetto remoto
 ├── src/
 │   ├── middleware.ts                  NEW · protegge route (app), refresha cookie Supabase
 │   ├── app/
@@ -274,38 +272,43 @@ git commit -m "chore: add shadcn ui and cohere design system"
 
 ---
 
-## Task 3: Init Supabase locale + script di reset
+## Task 3: Init Supabase + link a progetto remoto
+
+> **Cambio rispetto al plan iniziale:** lo sviluppo punta direttamente al progetto Supabase remoto `szkcpcqedikyhrxziuwu` (region `eu-west-1`, branch `main` PRODUCTION, **vuoto**). Niente Docker, niente `supabase start`. Le migrazioni vengono applicate via `supabase db push` o via MCP. Vedi spec §12.1.
 
 **Files:**
-- Create: `supabase/config.toml` (auto), `scripts/reset-db.ts`
+- Create: `supabase/config.toml` (auto da `supabase init`)
 - Modify: `package.json` (scripts), `.env.example`
 
-- [ ] **Step 3.1: Inizializzare Supabase**
+- [ ] **Step 3.1: Inizializzare struttura Supabase locale (per migration files)**
 
 ```bash
 pnpm dlx supabase init
 ```
 
-Quando chiede di generare VS Code settings: rispondi `n`. Verifica creazione di `supabase/config.toml`.
+Quando chiede di generare VS Code settings: rispondi `n`. Verifica creazione di `supabase/config.toml` e cartella `supabase/migrations/` (vuota).
 
-- [ ] **Step 3.2: Avviare stack Supabase locale**
+- [ ] **Step 3.2: Login e link al progetto remoto**
+
+> Pre-requisito: l'utente deve aver eseguito `supabase login` interattivamente in precedenza. Se il subagent non è loggato, deve fermarsi e chiedere all'utente di farlo (è interattivo, va eseguito a mano nella terminal del developer).
 
 ```bash
-pnpm dlx supabase start
+pnpm dlx supabase link --project-ref szkcpcqedikyhrxziuwu
 ```
 
-Annota i valori restituiti: `API URL`, `DB URL`, `anon key`, `service_role key`. Saranno usati in `.env.local`.
+Verifica: il comando deve completare senza errori. Crea `supabase/.temp/project-ref` (gitignored).
 
 - [ ] **Step 3.3: Creare `.env.example`**
 
 ```env
 # Public (browser)
 NEXT_PUBLIC_APP_URL=http://localhost:3000
-NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
-NEXT_PUBLIC_SUPABASE_ANON_KEY=<from supabase start>
+NEXT_PUBLIC_SUPABASE_URL=https://szkcpcqedikyhrxziuwu.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<from supabase dashboard: Settings -> API>
 
 # Server-only
-SUPABASE_SERVICE_ROLE_KEY=<from supabase start>
+SUPABASE_PROJECT_REF=szkcpcqedikyhrxziuwu
+SUPABASE_SERVICE_ROLE_KEY=<from supabase dashboard: Settings -> API>
 
 # Used in Plan #2
 NOMINATIM_USER_AGENT=BrokerEnergetico/1.0 (ivan@barikreativa.com)
@@ -324,18 +327,17 @@ MAX_UPLOAD_MB=10
 
 - [ ] **Step 3.4: Creare `.env.local` (NON committare)**
 
-Copia `.env.example` in `.env.local` e popola con i valori reali del passo 3.2.
+L'utente fornisce le keys (`NEXT_PUBLIC_SUPABASE_ANON_KEY` e `SUPABASE_SERVICE_ROLE_KEY`) prelevandole da Dashboard → Settings → API. Copia `.env.example` in `.env.local` e popola.
 
 - [ ] **Step 3.5: Aggiungere script npm a `package.json`**
 
-In `"scripts"` aggiungi:
+In `"scripts"` aggiungi (NON usare `db:start`/`db:stop`/`db:reset` perché il DB è remoto):
 
 ```json
-"db:start": "supabase start",
-"db:stop": "supabase stop",
-"db:reset": "supabase db reset",
-"db:types": "supabase gen types typescript --local > src/types/database.ts",
-"db:diff": "supabase db diff",
+"db:push": "supabase db push --linked",
+"db:diff": "supabase db diff --linked",
+"db:types": "supabase gen types typescript --linked > src/types/database.ts",
+"db:link": "supabase link --project-ref szkcpcqedikyhrxziuwu",
 "test": "vitest run",
 "test:watch": "vitest",
 "test:rls": "vitest run tests/rls",
@@ -354,20 +356,22 @@ In `"scripts"` aggiungi:
 }
 ```
 
-- [ ] **Step 3.7: Verifica reset DB pulito**
+- [ ] **Step 3.7: Verifica link al progetto remoto**
 
 ```bash
-pnpm db:reset
+pnpm dlx supabase migration list --linked
 ```
 
-Expected: messaggio "Finished supabase db reset" senza errori (DB è vuoto, è solo uno smoke test del comando).
+Expected: lista vuota (nessuna migrazione ancora applicata) o output che conferma il link.
 
 - [ ] **Step 3.8: Commit**
 
 ```bash
-git add -A
-git commit -m "chore: init local supabase and db scripts"
+git add supabase/config.toml .env.example package.json
+git commit -m "chore: init supabase cli and link to remote project"
 ```
+
+> Nota: `supabase/.temp/`, `supabase/.branches/` sono gitignored (già coperti dal Task 1).
 
 ---
 
@@ -420,7 +424,7 @@ COMMIT;
 - [ ] **Step 4.2: Applicare e verificare**
 
 ```bash
-pnpm db:reset
+pnpm db:push
 ```
 
 Expected: la migrazione si applica senza errori. Verifica:
@@ -567,7 +571,7 @@ COMMIT;
 - [ ] **Step 5.2: Applicare**
 
 ```bash
-pnpm db:reset
+pnpm db:push
 ```
 
 Expected: nessun errore. Verifica con `pnpm dlx supabase db dump --local --schema public --data-only=false | head -100` che le tabelle siano presenti.
@@ -621,7 +625,7 @@ COMMIT;
 - [ ] **Step 6.2: Applicare**
 
 ```bash
-pnpm db:reset
+pnpm db:push
 ```
 
 - [ ] **Step 6.3: Commit**
@@ -656,7 +660,7 @@ Le policy del bucket le aggiungiamo nel Task 16, dopo quelle delle tabelle (rius
 - [ ] **Step 7.2: Applicare**
 
 ```bash
-pnpm db:reset
+pnpm db:push
 ```
 
 - [ ] **Step 7.3: Commit**
@@ -728,7 +732,7 @@ COMMIT;
 - [ ] **Step 8.2: Applicare**
 
 ```bash
-pnpm db:reset
+pnpm db:push
 ```
 
 - [ ] **Step 8.3: Commit**
@@ -788,7 +792,7 @@ COMMIT;
 - [ ] **Step 9.2: Applicare**
 
 ```bash
-pnpm db:reset
+pnpm db:push
 ```
 
 - [ ] **Step 9.3: Commit**
@@ -1082,7 +1086,7 @@ COMMIT;
 - [ ] **Step 11.4: Applicare e rieseguire test**
 
 ```bash
-pnpm db:reset && pnpm test:rls tests/rls/profiles.test.ts
+pnpm db:push && pnpm test:rls tests/rls/profiles.test.ts
 ```
 
 Expected: tutti i test passano.
@@ -1256,7 +1260,7 @@ COMMIT;
 - [ ] **Step 12.4: Applicare e rieseguire test**
 
 ```bash
-pnpm db:reset && pnpm test:rls tests/rls/clienti.test.ts
+pnpm db:push && pnpm test:rls tests/rls/clienti.test.ts
 ```
 
 Expected: tutti i test passano.
@@ -1370,7 +1374,7 @@ COMMIT;
 - [ ] **Step 13.4: Applicare e rieseguire test**
 
 ```bash
-pnpm db:reset && pnpm test:rls tests/rls/fornitori.test.ts
+pnpm db:push && pnpm test:rls tests/rls/fornitori.test.ts
 ```
 
 - [ ] **Step 13.5: Commit**
@@ -1514,7 +1518,7 @@ COMMIT;
 - [ ] **Step 14.4: Applicare e rieseguire test**
 
 ```bash
-pnpm db:reset && pnpm test:rls tests/rls/contratti.test.ts
+pnpm db:push && pnpm test:rls tests/rls/contratti.test.ts
 ```
 
 - [ ] **Step 14.5: Commit**
@@ -1634,7 +1638,7 @@ COMMIT;
 - [ ] **Step 15.4: Applicare e rieseguire test**
 
 ```bash
-pnpm db:reset && pnpm test:rls tests/rls/documenti.test.ts
+pnpm db:push && pnpm test:rls tests/rls/documenti.test.ts
 ```
 
 - [ ] **Step 15.5: Commit**
@@ -1797,7 +1801,7 @@ COMMIT;
 - [ ] **Step 16.6: Applicare e rieseguire test**
 
 ```bash
-pnpm db:reset && pnpm test:rls
+pnpm db:push && pnpm test:rls
 ```
 
 Expected: tutti i test RLS passano.
@@ -3168,7 +3172,7 @@ test("unauthenticated user is redirected to login", async ({ page }) => {
 - [ ] **Step 28.5: Run E2E**
 
 ```bash
-pnpm db:reset && pnpm db:seed:users && pnpm test:e2e
+pnpm db:push && pnpm db:seed:users && pnpm test:e2e
 ```
 
 Expected: 2 passed.
@@ -3199,8 +3203,14 @@ on:
     branches: [main]
 
 jobs:
-  lint-and-test:
+  lint-and-build:
     runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      SUPABASE_PROJECT_REF: szkcpcqedikyhrxziuwu
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -3211,30 +3221,32 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
 
-      - name: Start Supabase local
-        run: pnpm dlx supabase start
-
-      - name: Wait for Supabase + apply migrations
-        run: pnpm dlx supabase db reset
-
-      - name: Export Supabase env for tests
-        run: |
-          status=$(pnpm dlx supabase status --output json)
-          echo "NEXT_PUBLIC_SUPABASE_URL=$(echo "$status" | jq -r '.API_URL')" >> $GITHUB_ENV
-          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$(echo "$status" | jq -r '.ANON_KEY')" >> $GITHUB_ENV
-          echo "SUPABASE_SERVICE_ROLE_KEY=$(echo "$status" | jq -r '.SERVICE_ROLE_KEY')" >> $GITHUB_ENV
-          echo "NEXT_PUBLIC_APP_URL=http://localhost:3000" >> $GITHUB_ENV
-
       - run: pnpm typecheck
       - run: pnpm lint
       - run: pnpm test
-      - run: pnpm test:rls
       - run: pnpm build
 
-      - name: Stop Supabase
-        if: always()
-        run: pnpm dlx supabase stop --no-backup
+  rls-tests:
+    runs-on: ubuntu-latest
+    # Solo su push a main (i test RLS toccano il DB remoto, evitiamo concorrenza su PR)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test:rls
 ```
+
+> Secrets richiesti su GitHub: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`. I test RLS sono separati e scoped al push su `main` per evitare race con altri PR — quando si scalerà, valutare un branch dedicato Supabase per CI.
 
 E2E in Playwright lo aggiungiamo in CI nel Plan #4 (richiede browser e server avviato, allunga la run; per ora sufficiente eseguirlo localmente prima di mergeare).
 
@@ -3265,25 +3277,31 @@ git commit -m "ci: github actions for typecheck lint test build"
 ```md
 # Broker Energetico
 
-Gestionale interno per broker energetico. Stack: Next.js 16 + Supabase.
+Gestionale interno per broker energetico. Stack: Next.js 16 + Supabase remoto.
 
 ## Setup dev
 
-Richiesti: Node 22, pnpm 9, Docker (per Supabase locale), Supabase CLI.
+Richiesti: Node 22, pnpm 9, Supabase CLI.
 
+Pre-step (una sola volta per developer):
 ```bash
-cp .env.example .env.local
+pnpm dlx supabase login                    # interattivo, autentica la CLI
+```
+
+Setup progetto:
+```bash
+cp .env.example .env.local                 # poi popolare le keys (vedi Dashboard → Settings → API)
 pnpm install
-pnpm db:start
-pnpm db:reset
-pnpm db:types
-pnpm db:seed:users
+pnpm db:link                               # link al progetto remoto szkcpcqedikyhrxziuwu
+pnpm db:push                               # applica le migrazioni al DB remoto (idempotente)
+pnpm db:types                              # rigenera tipi TS
+pnpm db:seed:users                         # crea i 3 utenti dev nel progetto remoto
 pnpm dev
 ```
 
-App: http://localhost:3000  ·  Studio: http://127.0.0.1:54323  ·  Email locale: http://127.0.0.1:54324
+App: http://localhost:3000  ·  Supabase Studio: https://supabase.com/dashboard/project/szkcpcqedikyhrxziuwu
 
-Utenti seed:
+Utenti seed (creati nel progetto remoto):
 - admin@dev.local / Password123!
 - commerciale@dev.local / Password123!
 - operatore@dev.local / Password123!
@@ -3295,10 +3313,12 @@ Utenti seed:
 | `pnpm dev` | dev server con turbopack |
 | `pnpm build` | build di produzione |
 | `pnpm test` | test unit |
-| `pnpm test:rls` | test RLS contro DB locale |
+| `pnpm test:rls` | test RLS contro DB remoto (crea/cancella utenti `test-*@example.com`) |
 | `pnpm test:e2e` | E2E con Playwright |
-| `pnpm db:reset` | reset DB locale + applica migrazioni |
-| `pnpm db:types` | rigenera `src/types/database.ts` |
+| `pnpm db:push` | applica migrazioni nuove al DB remoto |
+| `pnpm db:diff` | mostra differenze tra schema locale e remoto |
+| `pnpm db:types` | rigenera `src/types/database.ts` dal remoto |
+| `pnpm db:link` | link al progetto remoto |
 | `pnpm typecheck` | tsc --noEmit |
 | `pnpm lint` | eslint |
 | `pnpm format` | prettier --write |
