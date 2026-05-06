@@ -549,9 +549,11 @@ Mai link diretto. Server Action `getDownloadUrl(recordId)`:
 
 | Ambiente | Configurazione |
 |---|---|
-| Dev | Next.js dev server + `supabase start` (Docker) |
-| Preview | Branch deploy Vercel + Supabase branch preview (DB isolato per branch) |
-| Production | Vercel `fra1` + Supabase `eu-central-1` |
+| Dev | Next.js dev server + Supabase CLI **linked** al progetto remoto (`szkcpcqedikyhrxziuwu`, region `eu-west-1`). Niente Docker locale. |
+| Preview | Branch deploy Vercel + Supabase Database Branch (DB isolato per branch git, attivabile in fase 2 con piano Pro) |
+| Production | Vercel `fra1` + Supabase progetto `szkcpcqedikyhrxziuwu` |
+
+**Razionale dev remoto:** team piccolo, schema condiviso, nessun overhead Docker. Tutti gli sviluppatori puntano alla stessa istanza durante MVP. I test RLS creano utenti con prefisso `test-{uuid}@example.com` e li cancellano in `afterAll` per isolamento. Quando il team cresce o si va in produzione effettiva, si abilita Database Branching o si crea un secondo progetto `broker-energetico-dev`.
 
 ### 12.2 CI (GitHub Actions su PR)
 
