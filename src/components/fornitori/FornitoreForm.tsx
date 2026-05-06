@@ -18,8 +18,8 @@ export function FornitoreForm({ fornitore }: { fornitore?: Fornitore }) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const form = useForm<FornitoreInput>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(fornitoreSchema) as any,
     defaultValues: {
       nome: fornitore?.nome ?? "",

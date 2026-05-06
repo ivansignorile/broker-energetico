@@ -25,8 +25,8 @@ export function ClienteForm({ cliente, commerciali, currentRuolo, currentUserId 
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const form = useForm<ClienteInput>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(clienteSchema) as any,
     defaultValues: {
       tipo_cliente: cliente?.tipo_cliente ?? "privato",
