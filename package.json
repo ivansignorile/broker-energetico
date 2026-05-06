@@ -14,6 +14,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:rls": "vitest run tests/rls",
+    "db:seed:users": "tsx scripts/seed-dev-users.ts",
     "test:e2e": "playwright test",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
