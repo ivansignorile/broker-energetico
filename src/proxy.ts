@@ -1,4 +1,4 @@
-// src/middleware.ts
+// src/proxy.ts
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
@@ -9,7 +9,7 @@ const PUBLIC_PATHS = [
   "/reset-password",
 ];
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Refresh Supabase session cookie on every request
