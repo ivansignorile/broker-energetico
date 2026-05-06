@@ -60,3 +60,9 @@ coverage/
 # supabase
 supabase/.branches/
 supabase/.temp/
+
+# private docs (not for VCS)
+*.docx
+
+# ai-tool-specific files (project uses AGENTS.md only)
+CLAUDE.md
