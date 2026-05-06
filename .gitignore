@@ -66,3 +66,4 @@ supabase/.temp/
 
 # ai-tool-specific files (project uses AGENTS.md only)
 CLAUDE.md
+.claude/
