@@ -5,15 +5,22 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { requireProfile, isAdmin } from "@/lib/auth/session";
+import { createClient } from "@/lib/supabase/server";
 import { getCliente } from "@/lib/clienti/queries";
 import { ClienteMappa } from "@/components/clienti/ClienteMappa";
 import { ClienteDeleteButton } from "@/components/clienti/ClienteDeleteButton";
+import { ClienteContrattiSection } from "@/components/clienti/ClienteContrattiSection";
+import { ClienteDocumentiSection } from "@/components/clienti/ClienteDocumentiSection";
 
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   const profile = await requireProfile();
   const { id } = await params;
   const cliente = await getCliente(id);
   if (!cliente) notFound();
+
+  const supabase = await createClient();
+  const { data: fornitori } = await supabase.from("fornitori").select("id, nome");
+  const fornitoriMap = new Map((fornitori ?? []).map((f) => [f.id, f.nome]));
 
   return (
     <div className="space-y-6">
@@ -46,6 +53,11 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
             <ClienteMappa lat={cliente.lat} lng={cliente.lng} label={cliente.nome} />
           </CardContent>
         </Card>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <ClienteContrattiSection clienteId={cliente.id} fornitoriMap={fornitoriMap} />
+        <ClienteDocumentiSection clienteId={cliente.id} />
       </div>
     </div>
   );
