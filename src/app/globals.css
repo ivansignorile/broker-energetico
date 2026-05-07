@@ -161,6 +161,26 @@
   --sidebar-ring: oklch(0.548 0.193 259);
 }
 
+/* Cohere extended palette — surfaces, accents, semantic
+   Available as CSS variables, also exposed as utility classes below.
+*/
+:root {
+  --cohere-deep-green: #003c33;
+  --cohere-soft-stone: #eeece7;
+  --cohere-pale-green: #edfce9;
+  --cohere-pale-blue:  #f1f5ff;
+  --cohere-coral:      #ff7759;
+  --cohere-coral-soft: #ffad9b;
+  --cohere-action-blue:#1863dc;
+  --cohere-focus-blue: #4c6ee6;
+  --cohere-hairline:   #d9d9dd;
+  --cohere-ink:        #212121;
+  --cohere-near-black: #17171c;
+  --cohere-canvas:     #ffffff;
+  --cohere-muted:      #93939f;
+  --cohere-slate:      #75758a;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -171,4 +191,39 @@
   html {
     @apply font-sans;
   }
+}
+
+@layer utilities {
+  /* Mono uppercase tracking — for category markers, technical labels */
+  .cohere-mono-label {
+    font-family: var(--font-mono), ui-monospace, "SF Mono", Menlo, monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: var(--cohere-muted);
+  }
+  /* Pill CTA — Cohere primary button shape */
+  .cohere-pill {
+    border-radius: 9999px;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+  /* Surface tokens */
+  .cohere-surface-stone { background-color: var(--cohere-soft-stone); }
+  .cohere-surface-pale-green { background-color: var(--cohere-pale-green); }
+  .cohere-surface-pale-blue { background-color: var(--cohere-pale-blue); }
+  .cohere-surface-deep { background-color: var(--cohere-deep-green); color: #fff; }
+  .cohere-surface-near-black { background-color: var(--cohere-near-black); color: #fff; }
+
+  /* Display headline — tight tracking, monumental */
+  .cohere-display {
+    font-family: var(--font-sans);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+
+  /* Hairline rule */
+  .cohere-hairline { border-color: var(--cohere-hairline); }
 }
