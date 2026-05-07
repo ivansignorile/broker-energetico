@@ -1,4 +1,3 @@
-// src/app/(app)/contratti/[id]/page.tsx
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Pencil } from "lucide-react";
@@ -13,6 +12,7 @@ import { ContrattoDeleteButton } from "@/components/contratti/ContrattoDeleteBut
 import { RinnovaContrattoButton } from "@/components/contratti/RinnovaContrattoButton";
 import { PdfDownloadButton } from "@/components/shared/PdfDownloadButton";
 import { getContrattoAllegatoUrl } from "@/lib/documenti/actions";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   const profile = await requireProfile();
@@ -28,25 +28,26 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   ]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold">
-            {fornitore?.nome ?? "?"} · <span className="capitalize">{c.tipo}</span>
-          </h1>
-          <div className="flex items-center gap-2">
+    <div className="space-y-8">
+      <PageHeader
+        area={`Contratto · ${cliente?.nome ?? "?"}`}
+        title={`${fornitore?.nome ?? "?"} · ${c.tipo}`}
+        meta={
+          <span className="flex items-center gap-2">
             <ContrattoStatoBadge stato={c.stato} />
             {c.stato === "attivo" && <ScadenzaBadge data={c.data_scadenza} />}
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" render={<Link href={`/contratti/${c.id}/modifica`}><Pencil className="mr-2 h-4 w-4" /> Modifica</Link>} />
-          {c.stato === "attivo" && (
-            <RinnovaContrattoButton id={c.id} defaultStart={c.data_scadenza} defaultEnd={addYear(c.data_scadenza)} />
-          )}
-          {isAdmin(profile) && <ContrattoDeleteButton id={c.id} />}
-        </div>
-      </div>
+          </span>
+        }
+        actions={
+          <>
+            <Button variant="outline" render={<Link href={`/contratti/${c.id}/modifica`}><Pencil className="mr-2 h-4 w-4" /> Modifica</Link>} />
+            {c.stato === "attivo" && (
+              <RinnovaContrattoButton id={c.id} defaultStart={c.data_scadenza} defaultEnd={addYear(c.data_scadenza)} />
+            )}
+            {isAdmin(profile) && <ContrattoDeleteButton id={c.id} />}
+          </>
+        }
+      />
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card>

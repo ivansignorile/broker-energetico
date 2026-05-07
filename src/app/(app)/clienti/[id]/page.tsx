@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { requireProfile, isAdmin } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { getCliente } from "@/lib/clienti/queries";
@@ -11,6 +10,7 @@ import { ClienteMappa } from "@/components/clienti/ClienteMappa";
 import { ClienteDeleteButton } from "@/components/clienti/ClienteDeleteButton";
 import { ClienteContrattiSection } from "@/components/clienti/ClienteContrattiSection";
 import { ClienteDocumentiSection } from "@/components/clienti/ClienteDocumentiSection";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   const profile = await requireProfile();
@@ -22,20 +22,30 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   const { data: fornitori } = await supabase.from("fornitori").select("id, nome");
   const fornitoriMap = new Map((fornitori ?? []).map((f) => [f.id, f.nome]));
 
+  const tipoColor = cliente.tipo_cliente === "azienda"
+    ? { bg: "var(--cohere-deep-green)", fg: "#fff" }
+    : { bg: "var(--cohere-soft-stone)", fg: "var(--cohere-ink)" };
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">{cliente.nome}</h1>
-          <Badge variant={cliente.tipo_cliente === "azienda" ? "default" : "secondary"} className="mt-1 capitalize">
+    <div className="space-y-8">
+      <PageHeader
+        area={`Anagrafica · ${cliente.tipo_cliente === "azienda" ? "Azienda" : "Privato"}`}
+        title={cliente.nome}
+        meta={
+          <span
+            className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize"
+            style={{ backgroundColor: tipoColor.bg, color: tipoColor.fg }}
+          >
             {cliente.tipo_cliente}
-          </Badge>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" render={<Link href={`/clienti/${cliente.id}/modifica`}><Pencil className="mr-2 h-4 w-4" /> Modifica</Link>} />
-          {isAdmin(profile) && <ClienteDeleteButton id={cliente.id} nome={cliente.nome} />}
-        </div>
-      </div>
+          </span>
+        }
+        actions={
+          <>
+            <Button variant="outline" render={<Link href={`/clienti/${cliente.id}/modifica`}><Pencil className="mr-2 h-4 w-4" /> Modifica</Link>} />
+            {isAdmin(profile) && <ClienteDeleteButton id={cliente.id} nome={cliente.nome} />}
+          </>
+        }
+      />
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card>

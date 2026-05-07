@@ -2,11 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireProfile, isAdmin } from "@/lib/auth/session";
 import { getFornitore } from "@/lib/fornitori/queries";
 import { FornitoreDeleteButton } from "@/components/fornitori/FornitoreDeleteButton";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   const profile = await requireProfile();
@@ -15,20 +15,36 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   if (!f) notFound();
   const c = (f.contatti as { referente?: string; email?: string; telefono?: string } | null) ?? {};
 
+  const statoStyle = f.attivo
+    ? { bg: "var(--cohere-pale-green)", fg: "var(--cohere-deep-green)" }
+    : { bg: "transparent", fg: "var(--cohere-muted)", ring: "var(--cohere-hairline)" };
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">{f.nome}</h1>
-          <Badge variant={f.attivo ? "secondary" : "outline"} className="mt-1">{f.attivo ? "Attivo" : "Disattivato"}</Badge>
-        </div>
-        {isAdmin(profile) && (
-          <div className="flex items-center gap-2">
-            <Button variant="outline" render={<Link href={`/fornitori/${f.id}/modifica`}><Pencil className="mr-2 h-4 w-4" /> Modifica</Link>} />
-            <FornitoreDeleteButton id={f.id} nome={f.nome} />
-          </div>
-        )}
-      </div>
+    <div className="space-y-8">
+      <PageHeader
+        area="Anagrafica · Fornitore"
+        title={f.nome}
+        meta={
+          <span
+            className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
+            style={{
+              backgroundColor: statoStyle.bg,
+              color: statoStyle.fg,
+              boxShadow: statoStyle.ring ? `inset 0 0 0 1px ${statoStyle.ring}` : undefined,
+            }}
+          >
+            {f.attivo ? "Attivo" : "Disattivato"}
+          </span>
+        }
+        actions={
+          isAdmin(profile) ? (
+            <>
+              <Button variant="outline" render={<Link href={`/fornitori/${f.id}/modifica`}><Pencil className="mr-2 h-4 w-4" /> Modifica</Link>} />
+              <FornitoreDeleteButton id={f.id} nome={f.nome} />
+            </>
+          ) : null
+        }
+      />
       <Card>
         <CardHeader><CardTitle>Contatti</CardTitle></CardHeader>
         <CardContent className="space-y-2 text-sm">
