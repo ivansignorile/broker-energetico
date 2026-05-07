@@ -1,12 +1,11 @@
-import { Badge } from "@/components/ui/badge";
 import type { StatoContratto } from "@/lib/supabase/types";
 
-const VARIANT: Record<StatoContratto, "default" | "secondary" | "outline" | "destructive"> = {
-  bozza: "outline",
-  attivo: "default",
-  scaduto: "destructive",
-  rinnovato: "secondary",
-  annullato: "outline",
+const STYLE: Record<StatoContratto, { bg: string; fg: string; ring?: string }> = {
+  bozza:      { bg: "var(--cohere-soft-stone)",  fg: "var(--cohere-ink)",  ring: "var(--cohere-hairline)" },
+  attivo:     { bg: "var(--cohere-deep-green)",  fg: "#fff" },
+  scaduto:    { bg: "var(--cohere-coral-soft)",  fg: "var(--cohere-ink)" },
+  rinnovato:  { bg: "var(--cohere-pale-blue)",   fg: "var(--cohere-action-blue)" },
+  annullato:  { bg: "transparent",               fg: "var(--cohere-muted)", ring: "var(--cohere-hairline)" },
 };
 
 const LABEL: Record<StatoContratto, string> = {
@@ -18,5 +17,17 @@ const LABEL: Record<StatoContratto, string> = {
 };
 
 export function ContrattoStatoBadge({ stato }: { stato: StatoContratto }) {
-  return <Badge variant={VARIANT[stato]} className="capitalize">{LABEL[stato]}</Badge>;
+  const s = STYLE[stato];
+  return (
+    <span
+      className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
+      style={{
+        backgroundColor: s.bg,
+        color: s.fg,
+        boxShadow: s.ring ? `inset 0 0 0 1px ${s.ring}` : undefined,
+      }}
+    >
+      {LABEL[stato]}
+    </span>
+  );
 }
