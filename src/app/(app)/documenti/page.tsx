@@ -1,10 +1,12 @@
-// src/app/(app)/documenti/page.tsx
+import { Folder } from "lucide-react";
 import { requireProfile } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { listDocumenti, type DocumentiFilter } from "@/lib/documenti/queries";
 import { DocumentiTable } from "@/components/documenti/DocumentiTable";
 import { DocumentiFilterBar } from "@/components/documenti/DocumentiFilterBar";
 import { TIPO_DOCUMENTO, type DocumentoInput } from "@/lib/validation/documento-schema";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { EmptyState } from "@/components/shared/EmptyState";
 
 export default async function Page({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   await requireProfile();
@@ -19,6 +21,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
     tipo,
     in_scadenza_entro: (entro === 0 || entro === 15 || entro === 30 || entro === 60) ? entro : undefined,
   };
+  const hasFilters = !!(filter.cliente_id || filter.tipo || filter.in_scadenza_entro != null);
 
   const supabase = await createClient();
   const [documenti, clientiRes] = await Promise.all([
@@ -29,13 +32,26 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
   const rows = documenti.map((d) => ({ ...d, cliente_nome: clientiMap.get(d.cliente_id) ?? null }));
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Documenti</h1>
-        <p className="text-sm text-muted-foreground">I documenti si caricano dalla scheda cliente.</p>
-      </div>
+    <div className="space-y-8">
+      <PageHeader
+        area="Operatività"
+        title="Documenti"
+        subtitle="Documenti collegati ai clienti. Si caricano dalla scheda del cliente."
+      />
       <DocumentiFilterBar />
-      <DocumentiTable rows={rows} />
+      {rows.length === 0 ? (
+        <EmptyState
+          icon={Folder}
+          title={hasFilters ? "Nessun documento trovato" : "Ancora nessun documento"}
+          description={
+            hasFilters
+              ? "Allarga i filtri o azzerali per vedere tutti i documenti."
+              : "Apri la scheda di un cliente e carica il primo documento (es. carta d'identità)."
+          }
+        />
+      ) : (
+        <DocumentiTable rows={rows} />
+      )}
     </div>
   );
 }

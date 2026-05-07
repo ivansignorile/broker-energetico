@@ -3,6 +3,7 @@ import { requireProfile } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { getCliente } from "@/lib/clienti/queries";
 import { ClienteForm } from "@/components/clienti/ClienteForm";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   const profile = await requireProfile();
@@ -18,8 +19,12 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
     .order("nome_completo");
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <h1 className="text-2xl font-semibold">Modifica {cliente.nome}</h1>
+    <div className="mx-auto max-w-3xl space-y-8">
+      <PageHeader
+        area="Anagrafica · Clienti"
+        title={`Modifica ${cliente.nome}`}
+        subtitle="Modifica i dati o correggi le coordinate manualmente. Le modifiche all'indirizzo riattivano il geocoding."
+      />
       <ClienteForm
         cliente={cliente}
         commerciali={commerciali ?? []}
